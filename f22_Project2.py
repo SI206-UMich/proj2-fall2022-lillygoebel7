@@ -51,7 +51,7 @@ def get_listings_from_search_results(html_file):
     for i in range(len(title_tag)):
          tup=(title_list[i], int(price_list[i]), id_list[i])
          endList.append(tup)
-    print(endList)
+    #print(endList)
     return endList
 
 
@@ -80,7 +80,35 @@ def get_listing_information(listing_id):
         number of bedrooms
     )
     """
-    pass
+    html_file = "html_files/listing_" + listing_id + ".html"
+    f = open(html_file, 'r')
+    my_str = f.read()
+    f.close()
+    soup = BeautifulSoup(my_str, 'html.parser')
+
+    policy_num = str(soup.find_all('span', class_="ll4r2nl dir dir-ltr"))
+    if re.findall('>([A-Z]+[\-]\d+|\d+[\-]\d+\w+)', policy_num):
+        cleaned_policy_num = re.findall('>([A-Z]+[\-]\d+|\d+[\-]\d+\w+)', policy_num)
+    elif re.findall('Pending', policy_num):
+        cleaned_policy_num = "Pending"
+    else:
+        cleaned_policy_num = "Exempt"
+    #print(cleaned_policy_num)
+
+    place_type = str(soup.find_all('h2', class_="_14i3z6h"))
+    if re.findall('Private', place_type):
+        place = "Private Room"
+    elif re.findall('Shared', place_type):
+        place = "Shared Room"
+    else:
+        place = "Entire Room"
+
+    bedroom_num_tags = str(soup.find_all('li', class_='l7n4lsf dir dir-ltr'))
+    bedroom_num = re.findall('(\d\d?) bedrooms?', bedroom_num_tags)
+
+    myTup = (cleaned_policy_num[0], place, int(bedroom_num[0]))
+    #print(myTup)
+    return myTup
 
 
 def get_detailed_listing_database(html_file):
@@ -97,6 +125,7 @@ def get_detailed_listing_database(html_file):
         ...
     ]
     """
+    
     pass
 
 
@@ -273,3 +302,11 @@ if __name__ == '__main__':
     unittest.main(verbosity=2)
 
     get_listings_from_search_results("html_files/mission_district_search_results.html")
+
+    # get_listing_information("1623609")
+    # get_listing_information("1944564")
+    # get_listing_information("1550913")
+    # get_listing_information("4616596")
+    # get_listing_information("6600081")
+
+
