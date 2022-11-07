@@ -28,24 +28,32 @@ def get_listings_from_search_results(html_file):
         ('Loft in Mission District', 210, '1944564'),  # example
     ]
     """
-    url = html_file
-    r = open(url, 'r')
-    my_str = ""
-    for line in r:
-        line = line.strip()
-        my_str += line
+    f = open(html_file, 'r')
+    my_str = f.read()
+    f.close()
+    
     soup = BeautifulSoup(my_str, 'html.parser')
-    r.close()
 
-    myList = []
-    title = soup.find_all('h1', class_='_fecoyn4')
+    title_tag = soup.find_all('div', class_='t1jojoys dir dir-ltr')
+    title_list = []
+    for title in title_tag:
+        title_list.append(title.text.strip())
+
     price_tag = soup.find_all('span', class_='_tyxjp1')
-    price = re.findall('class_="_tyxjp1">$(\d{3}', price_tag)
-    id_num = re.findall('https://www.airbnb.com/rooms/(\d{7})', url)
-    myTup = (title, price, id_num)
-    myList = myList.append(myTup)
-    print(myList)
-    return myList
+    price_list = []
+    for price in price_tag:
+        price_list.append(price.text.strip('$'))
+
+    ids = str(soup.find_all('a', class_='ln2bl2p dir dir-ltr'))
+    id_list = re.findall('\d{7}', ids)
+
+    endList = []
+    for i in range(len(title_tag)):
+         tup=(title_list[i], int(price_list[i]), id_list[i])
+         endList.append(tup)
+    print(endList)
+    return endList
+
 
 
 def get_listing_information(listing_id):
