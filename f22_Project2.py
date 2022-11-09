@@ -106,10 +106,14 @@ def get_listing_information(listing_id):
     #print(place)
 
     bedroom_num_tags = str(soup.find_all('li', class_='l7n4lsf dir dir-ltr'))
-    bedroom_num = re.findall('(?:\d\d? bedrooms?|studio)', bedroom_num_tags)
-    print(bedroom_num)
+    bedroom_num = re.findall('(?:\d\d? \w*\s?bedrooms?|Studio)', bedroom_num_tags)
+    if bedroom_num[0] == "Studio":
+        bedroom_num = 1
+    else:
+        bedroom_num = int(re.findall('(\d\d?) \w*\s?bedrooms?', bedroom_num_tags)[0])
+    #print(bedroom_num)
 
-    myTup = (cleaned_policy_num, place, bedroom_num[0])
+    myTup = (cleaned_policy_num, place, bedroom_num)
     #print(myTup)
     return myTup
 
@@ -162,6 +166,17 @@ def write_csv(data, filename):
 
     This function should not return anything.
     """
+    newFile = open(filename, 'w')
+    writer = csv.writer(newFile)
+
+    heading_line = ['Listing Title','Cost','Listing ID','Policy Number','Place Type','Number of Bedrooms']
+    writer.writerow(heading_line)
+
+    sort_list = sorted(data, key = lambda t: t[1])
+    #print(sort_list)
+    for item in sort_list:
+            writer.writerow(item)
+    newFile.close()
     pass
 
 
@@ -184,7 +199,20 @@ def check_policy_numbers(data):
     ]
 
     """
-    pass
+    final_id = []
+    for item in data:
+        id = item[3]
+        #print(id)
+        if id == re.findall('(?:20\d\d-00\d\d\d\dSTR|STR-000\d\d\d\d)', id):
+            continue
+        elif id == 'Exempt':
+            continue
+        elif id == 'Pending':
+            continue
+        else:
+            final_id.append(id)
+    #print(final_id)
+    return final_id
 
 
 def extra_credit(listing_id):
@@ -215,10 +243,12 @@ class TestCases(unittest.TestCase):
         # check that the variable you saved after calling the function is a list
         self.assertEqual(type(listings), list)
         # check that each item in the list is a tuple
-
+        for item in listings:
+            self.assertEqual(type(item), tuple)
         # check that the first title, cost, and listing id tuple is correct (open the search results html and find it)
-
+        self.assertEqual(listings[0], ('Loft in Mission District', 210, '1944564'))
         # check that the last title is correct (open the search results html and find it)
+        self.assertEqual(listings[-1], ('Guest suite in Mission District', 238, '32871760'))
         pass
 
     def test_get_listing_information(self):
@@ -242,11 +272,11 @@ class TestCases(unittest.TestCase):
             # check that the third element in the tuple is an int
             self.assertEqual(type(listing_information[2]), int)
         # check that the first listing in the html_list has policy number 'STR-0001541'
-
+        self.assertEqual(listing_informations[0][0], 'STR-0001541')
         # check that the last listing in the html_list is a "Private Room"
-
+        self.assertEqual(listing_informations[-1][1], 'Private Room')
         # check that the third listing has one bedroom
-
+        self.assertEqual(listing_informations[2][2], 1)
         pass
 
     def test_get_detailed_listing_database(self):
@@ -259,13 +289,13 @@ class TestCases(unittest.TestCase):
             # assert each item in the list of listings is a tuple
             self.assertEqual(type(item), tuple)
             # check that each tuple has a length of 6
-
+            self.assertEqual(len(item), 6)
         # check that the first tuple is made up of the following:
         # 'Loft in Mission District', 210, '1944564', '2022-004088STR', 'Entire Room', 1
-
+        self.assertEqual(detailed_database[0], ('Loft in Mission District', 210, '1944564', '2022-004088STR', 'Entire Room', 1))
         # check that the last tuple is made up of the following:
         # 'Guest suite in Mission District', 238, '32871760', 'STR-0004707', 'Entire Room', 1
-
+        self.assertEqual(detailed_database[-1], ('Guest suite in Mission District', 238, '32871760', 'STR-0004707', 'Entire Room', 1))
         pass
 
     def test_write_csv(self):
@@ -283,11 +313,11 @@ class TestCases(unittest.TestCase):
         # check that there are 21 lines in the csv
         self.assertEqual(len(csv_lines), 21)
         # check that the header row is correct
-
+        self.assertEqual(csv_lines[0], ['Listing Title','Cost','Listing ID','Policy Number','Place Type','Number of Bedrooms'])
         # check that the next row is Private room in Mission District,82,51027324,Pending,Private Room,1
-
+        self.assertEqual(csv_lines[1], ['Private room in Mission District','82','51027324','Pending','Private Room','1'])
         # check that the last row is Apartment in Mission District,399,28668414,Pending,Entire Room,2
-
+        self.assertEqual(csv_lines[-1], ['Apartment in Mission District','399','28668414','Pending','Entire Room','2'])
         pass
 
     def test_check_policy_numbers(self):
