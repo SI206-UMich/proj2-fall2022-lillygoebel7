@@ -45,7 +45,7 @@ def get_listings_from_search_results(html_file):
         price_list.append(price.text.strip('$'))
 
     ids = str(soup.find_all('a', class_='ln2bl2p dir dir-ltr'))
-    id_list = re.findall('\d{7}', ids)
+    id_list = re.findall('title_(\d{7,18})', ids)
 
     endList = []
     for i in range(len(title_tag)):
@@ -89,6 +89,7 @@ def get_listing_information(listing_id):
     policy_num = str(soup.find_all('span', class_="ll4r2nl dir dir-ltr"))
     if re.findall('>([A-Z]+[\-]\d+|\d+[\-]\d+\w+)', policy_num):
         cleaned_policy_num = re.findall('>([A-Z]+[\-]\d+|\d+[\-]\d+\w+)', policy_num)
+        cleaned_policy_num = cleaned_policy_num[0]
     elif re.findall('Pending', policy_num):
         cleaned_policy_num = "Pending"
     else:
@@ -102,11 +103,13 @@ def get_listing_information(listing_id):
         place = "Shared Room"
     else:
         place = "Entire Room"
+    #print(place)
 
     bedroom_num_tags = str(soup.find_all('li', class_='l7n4lsf dir dir-ltr'))
-    bedroom_num = re.findall('(\d\d?) bedrooms?', bedroom_num_tags)
+    bedroom_num = re.findall('(?:\d\d? bedrooms?|studio)', bedroom_num_tags)
+    print(bedroom_num)
 
-    myTup = (cleaned_policy_num[0], place, int(bedroom_num[0]))
+    myTup = (cleaned_policy_num, place, bedroom_num[0])
     #print(myTup)
     return myTup
 
@@ -125,8 +128,16 @@ def get_detailed_listing_database(html_file):
         ...
     ]
     """
-    
-    pass
+
+    listingResults = get_listings_from_search_results(html_file)
+    id_list = []
+    for listing in listingResults:
+        #print(listing)
+        listing_id = get_listing_information(listing[2])
+        #print(listing_id)
+        id_list.append(listing + listing_id)
+    #print(id_list)
+    return id_list
 
 
 def write_csv(data, filename):
@@ -303,10 +314,12 @@ if __name__ == '__main__':
 
     get_listings_from_search_results("html_files/mission_district_search_results.html")
 
-    # get_listing_information("1623609")
+    get_listing_information("1623609")
     # get_listing_information("1944564")
     # get_listing_information("1550913")
     # get_listing_information("4616596")
     # get_listing_information("6600081")
+
+    get_detailed_listing_database("html_files/mission_district_search_results.html")
 
 
