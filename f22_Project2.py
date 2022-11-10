@@ -90,11 +90,14 @@ def get_listing_information(listing_id):
     if re.findall('>([A-Z]+[\-]\d+|\d+[\-]\d+\w+)', policy_num):
         cleaned_policy_num = re.findall('>([A-Z]+[\-]\d+|\d+[\-]\d+\w+)', policy_num)
         cleaned_policy_num = cleaned_policy_num[0]
-    elif re.findall('Pending', policy_num):
+    elif re.findall('\d{7}', policy_num):
+        cleaned_policy_num = re.findall('\d{7}', policy_num)
+        cleaned_policy_num = cleaned_policy_num[0]
+    elif re.findall('(?:P|p)ending', policy_num):
         cleaned_policy_num = "Pending"
     else:
         cleaned_policy_num = "Exempt"
-    #print(cleaned_policy_num)
+    #print(cleaned_policy_num) 
 
     place_type = str(soup.find_all('h2', class_="_14i3z6h"))
     if re.findall('Private', place_type):
@@ -199,18 +202,17 @@ def check_policy_numbers(data):
     ]
 
     """
+    #print(data)
     final_id = []
     for item in data:
+        #print(item)
         id = item[3]
         #print(id)
-        if id == re.findall('(?:20\d\d-00\d\d\d\dSTR|STR-000\d\d\d\d)', id):
-            continue
-        elif id == 'Exempt':
-            continue
-        elif id == 'Pending':
-            continue
+        if re.findall('(?:20\d\d-00\d\d\d\dSTR|STR-000\d\d\d\d|(?:P|p)ending|Exempt)', id):
+            ignore = re.findall('(?:20\d\d-00\d\d\d\dSTR|STR-000\d\d\d\d|(?:P|p)ending|Exempt)', id)
         else:
-            final_id.append(id)
+            #print(item)
+            final_id.append(item[2])
     #print(final_id)
     return final_id
 
@@ -329,10 +331,11 @@ class TestCases(unittest.TestCase):
         # check that the return value is a list
         self.assertEqual(type(invalid_listings), list)
         # check that there is exactly one element in the string
-
+        self.assertEqual(len(invalid_listings), 1)
         # check that the element in the list is a string
-
+        self.assertEqual(type(invalid_listings[0]), str)
         # check that the first element in the list is '16204265'
+        self.assertEqual(invalid_listings[0], '16204265')
         pass
 
 
@@ -345,10 +348,6 @@ if __name__ == '__main__':
     get_listings_from_search_results("html_files/mission_district_search_results.html")
 
     get_listing_information("1623609")
-    # get_listing_information("1944564")
-    # get_listing_information("1550913")
-    # get_listing_information("4616596")
-    # get_listing_information("6600081")
 
     get_detailed_listing_database("html_files/mission_district_search_results.html")
 
